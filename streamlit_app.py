@@ -730,6 +730,308 @@ with col2:
 
     st.plotly_chart(fig, use_container_width=True)
 
+st.markdown("---")
+
+# === Seasonality Section ===
+st.subheader("Seasonal Listening Patterns")
+if start_year == end_year:
+    st.caption(f"{start_year}")
+else:
+    st.caption(f"{start_year} - {end_year}")
+
+st.markdown("""
+    <div style='font-size: 0.85rem; color: #B3B3B3; margin-bottom: 1.5rem;'>
+        ❄️ Winter (Dec-Feb) • 🌸 Spring (Mar-May) • ☀️ Summer (Jun-Aug) • 🍂 Fall (Sep-Nov)
+    </div>
+""", unsafe_allow_html=True)
+
+# Define seasons based on meteorological seasons
+def get_season(month):
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Spring'
+    elif month in [6, 7, 8]:
+        return 'Summer'
+    else:  # 9, 10, 11
+        return 'Fall'
+
+filtered_df['season'] = filtered_df['month'].apply(get_season)
+
+season_order = ['Winter', 'Spring', 'Summer', 'Fall']
+season_emoji = {'Winter': '❄️', 'Spring': '🌸', 'Summer': '☀️', 'Fall': '🍂'}
+season_colors = {'Winter': '#4A90E2', 'Spring': '#81C784', 'Summer': '#FFB74D', 'Fall': '#E57373'}
+
+# Overall seasonal distribution
+st.markdown("#### Your Overall Seasonal Listening")
+
+all_season_totals = filtered_df.groupby('season').size().reindex(season_order)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    fig = px.bar(
+        x=season_order,
+        y=all_season_totals.values,
+        labels={'x': 'Season', 'y': 'Total Plays'},
+        title='Total Plays by Season'
+    )
+    fig.update_traces(
+        marker_color=[season_colors[s] for s in season_order],
+        hovertemplate='<b>%{x}</b><br>%{y:,} plays<extra></extra>'
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    # Pie chart showing percentage distribution
+    fig = px.pie(
+        values=all_season_totals.values,
+        names=season_order,
+        title='Seasonal Distribution (%)',
+        color=season_order,
+        color_discrete_map=season_colors
+    )
+    fig.update_traces(
+        hovertemplate='<b>%{label}</b><br>%{value:,} plays<br>%{percent}<extra></extra>'
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+st.markdown("---")
+
+# Artist/Song toggle and season filter
+toggle_col, season_col, sort_col = st.columns([1, 2.5, 1.5])
+
+with toggle_col:
+    view_type = st.radio("View:", ["Artists", "Songs"], horizontal=True)
+
+with season_col:
+    selected_season = st.radio(
+        "Filter by season:",
+        ["All Seasons"] + season_order,
+        horizontal=True
+    )
+
+# Show sort options only when a specific season is selected
+with sort_col:
+    if selected_season != "All Seasons":
+        sort_by = st.radio(
+            "Sort by:",
+            ["Total Plays", "Season Plays", "Season %"],
+            horizontal=True,
+            key="season_sort"
+        )
+    else:
+        sort_by = "Total Plays"
+
+st.markdown(f"#### Top {view_type} by Season")
+
+if view_type == "Artists":
+    # Get top 30 artists overall from filtered range
+    top_30_items = filtered_df['artist_name'].value_counts().head(30).index.tolist()
+    seasonal_df = filtered_df[filtered_df['artist_name'].isin(top_30_items)]
+
+    # Calculate plays per season for each artist
+    season_item_plays = seasonal_df.groupby(['artist_name', 'season']).size().reset_index(name='plays')
+
+    # Create a pivot table
+    heatmap_data = season_item_plays.pivot(index='artist_name', columns='season', values='plays').fillna(0)
+    heatmap_data = heatmap_data.reindex(columns=season_order, fill_value=0)
+
+    # Calculate percentage distribution
+    heatmap_data_pct = heatmap_data.div(heatmap_data.sum(axis=1), axis=0) * 100
+
+    # Calculate total plays per item for sorting
+    total_plays_per_item = heatmap_data.sum(axis=1)
+
+    # Sort based on selected season and sort option
+    if selected_season == "All Seasons":
+        item_order = total_plays_per_item.sort_values(ascending=False).index.tolist()
+    else:
+        if sort_by == "Total Plays":
+            item_order = total_plays_per_item.sort_values(ascending=False).index.tolist()
+        elif sort_by == "Season Plays":
+            item_order = heatmap_data[selected_season].sort_values(ascending=False).index.tolist()
+        else:  # Season %
+            item_order = heatmap_data_pct[selected_season].sort_values(ascending=False).index.tolist()
+
+    # Split into two columns of 15 items each
+    left_col, right_col = st.columns(2)
+
+    # Left column: Items 1-15
+    with left_col:
+        for idx in range(15):
+            if idx < len(item_order):
+                item = item_order[idx]
+                global_rank = idx + 1
+                total_item_plays = int(total_plays_per_item[item])
+
+                # Compact row layout
+                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+
+                with rank_col:
+                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+
+                with img_col:
+                    item_img = get_artist_image(item)
+                    display_image_with_placeholder(item_img, "🎤", width=700)
+
+                with info_col:
+                    # Season boxes with hover (outline style)
+                    season_boxes = " ".join([
+                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                        for season in season_order
+                    ])
+                    st.markdown(f"""
+                        <div style='padding-top: 4px; font-size: 0.85rem;'>
+                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
+                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+
+    # Right column: Items 16-30
+    with right_col:
+        for idx in range(15, 30):
+            if idx < len(item_order):
+                item = item_order[idx]
+                global_rank = idx + 1
+                total_item_plays = int(total_plays_per_item[item])
+
+                # Compact row layout
+                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+
+                with rank_col:
+                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+
+                with img_col:
+                    item_img = get_artist_image(item)
+                    display_image_with_placeholder(item_img, "🎤", width=700)
+
+                with info_col:
+                    # Season boxes with hover (outline style)
+                    season_boxes = " ".join([
+                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                        for season in season_order
+                    ])
+                    st.markdown(f"""
+                        <div style='padding-top: 4px; font-size: 0.85rem;'>
+                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
+                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+
+else:  # Songs
+    # Get top 30 songs overall from filtered range
+    top_30_items = filtered_df['track_name'].value_counts().head(30).index.tolist()
+    seasonal_df = filtered_df[filtered_df['track_name'].isin(top_30_items)]
+
+    # Calculate plays per season for each song
+    season_item_plays = seasonal_df.groupby(['track_name', 'season']).size().reset_index(name='plays')
+
+    # Create a pivot table
+    heatmap_data = season_item_plays.pivot(index='track_name', columns='season', values='plays').fillna(0)
+    heatmap_data = heatmap_data.reindex(columns=season_order, fill_value=0)
+
+    # Calculate percentage distribution
+    heatmap_data_pct = heatmap_data.div(heatmap_data.sum(axis=1), axis=0) * 100
+
+    # Calculate total plays per item for sorting
+    total_plays_per_item = heatmap_data.sum(axis=1)
+
+    # Sort based on selected season and sort option
+    if selected_season == "All Seasons":
+        item_order = total_plays_per_item.sort_values(ascending=False).index.tolist()
+    else:
+        if sort_by == "Total Plays":
+            item_order = total_plays_per_item.sort_values(ascending=False).index.tolist()
+        elif sort_by == "Season Plays":
+            item_order = heatmap_data[selected_season].sort_values(ascending=False).index.tolist()
+        else:  # Season %
+            item_order = heatmap_data_pct[selected_season].sort_values(ascending=False).index.tolist()
+
+    # Split into two columns of 15 items each
+    left_col, right_col = st.columns(2)
+
+    # Left column: Items 1-15
+    with left_col:
+        for idx in range(15):
+            if idx < len(item_order):
+                item = item_order[idx]
+                global_rank = idx + 1
+                total_item_plays = int(total_plays_per_item[item])
+
+                # Get artist for this track
+                artist = filtered_df[filtered_df['track_name'] == item]['artist_name'].iloc[0]
+
+                # Compact row layout
+                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+
+                with rank_col:
+                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+
+                with img_col:
+                    item_img = get_track_image(item, artist)
+                    display_image_with_placeholder(item_img, "🎵", width=50)
+
+                with info_col:
+                    # Season boxes with hover (outline style)
+                    season_boxes = " ".join([
+                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                        for season in season_order
+                    ])
+                    st.markdown(f"""
+                        <div style='padding-top: 4px; font-size: 0.85rem;'>
+                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
+                            <div style='color: #B3B3B3; font-size: 0.75rem;'>{artist}</div>
+                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+
+    # Right column: Items 16-30
+    with right_col:
+        for idx in range(15, 30):
+            if idx < len(item_order):
+                item = item_order[idx]
+                global_rank = idx + 1
+                total_item_plays = int(total_plays_per_item[item])
+
+                # Get artist for this track
+                artist = filtered_df[filtered_df['track_name'] == item]['artist_name'].iloc[0]
+
+                # Compact row layout
+                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+
+                with rank_col:
+                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+
+                with img_col:
+                    item_img = get_track_image(item, artist)
+                    display_image_with_placeholder(item_img, "🎵", width=50)
+
+                with info_col:
+                    # Season boxes with hover (outline style)
+                    season_boxes = " ".join([
+                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                        for season in season_order
+                    ])
+                    st.markdown(f"""
+                        <div style='padding-top: 4px; font-size: 0.85rem;'>
+                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
+                            <div style='color: #B3B3B3; font-size: 0.75rem;'>{artist}</div>
+                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+
+# Show total count
+st.caption(f"Showing top {len(item_order)} {view_type.lower()}")
+
 # Footer
 st.markdown("---")
 st.caption("Data from Spotify API + Historical Export | Updated daily via Airflow")
