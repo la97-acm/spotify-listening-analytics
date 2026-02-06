@@ -365,7 +365,7 @@ with col1:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-# Right column: Artist list with images in two columns
+# Right column: Artist list with images in two sub-columns
 with col2:
     # Add top padding to align with chart title area
     st.markdown('<div style="margin-top: 55px;"></div>', unsafe_allow_html=True)
@@ -378,13 +378,23 @@ with col2:
             if i < len(top_artists):
                 artist = top_artists.index[i]
                 plays = top_artists.values[i]
+                artist_img = get_artist_image(artist)
 
-                img_col, text_col = st.columns([1, 4])
-                with img_col:
-                    artist_img = get_artist_image(artist)
-                    display_image_with_placeholder(artist_img, "🎤", width=50)
-                with text_col:
-                    st.markdown(f"<small><b>{i+1}.</b> {artist}<br>{plays:,} plays</small>", unsafe_allow_html=True)
+                # Use HTML to create inline image + text layout
+                if artist_img:
+                    img_html = f'<img src="{artist_img}" width="50" style="border-radius: 4px; vertical-align: middle; margin-right: 10px;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 50px; height: 50px; background: #282828; border-radius: 4px; text-align: center; line-height: 50px; margin-right: 10px; vertical-align: middle;">🎤</span>'
+
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        {img_html}
+                        <div>
+                            <b>{i+1}.</b> {artist}<br>
+                            <span style="color: #B3B3B3; font-size: 0.85rem;">{plays:,} plays</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
     # Artists 6-10
     with subcol2:
@@ -392,13 +402,23 @@ with col2:
             if i < len(top_artists):
                 artist = top_artists.index[i]
                 plays = top_artists.values[i]
+                artist_img = get_artist_image(artist)
 
-                img_col, text_col = st.columns([1, 4])
-                with img_col:
-                    artist_img = get_artist_image(artist)
-                    display_image_with_placeholder(artist_img, "🎤", width=50)
-                with text_col:
-                    st.markdown(f"<small><b>{i+1}.</b> {artist}<br>{plays:,} plays</small>", unsafe_allow_html=True)
+                # Use HTML to create inline image + text layout
+                if artist_img:
+                    img_html = f'<img src="{artist_img}" width="50" style="border-radius: 4px; vertical-align: middle; margin-right: 10px;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 50px; height: 50px; background: #282828; border-radius: 4px; text-align: center; line-height: 50px; margin-right: 10px; vertical-align: middle;">🎤</span>'
+
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        {img_html}
+                        <div>
+                            <b>{i+1}.</b> {artist}<br>
+                            <span style="color: #B3B3B3; font-size: 0.85rem;">{plays:,} plays</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -448,33 +468,55 @@ with col2:
 
     subcol1, subcol2 = st.columns(2)
 
+    # Songs 1-5
     with subcol1:
         for i in range(5):
             if i < len(top_songs):
                 song = top_songs.index[i]
                 artist = filtered_df[filtered_df['track_name'] == song]['artist_name'].iloc[0]
                 plays = top_songs.values[i]
+                album_img = get_track_image(song, artist)
 
-                img_col, text_col = st.columns([1, 4])
-                with img_col:
-                    album_img = get_track_image(song, artist)
-                    display_image_with_placeholder(album_img, "🎵", width=50)
-                with text_col:
-                    st.markdown(f"<small><b>{i+1}.</b> {song}<br>{artist} - {plays:,} plays</small>", unsafe_allow_html=True)
+                # Use HTML to create inline image + text layout
+                if album_img:
+                    img_html = f'<img src="{album_img}" width="50" style="border-radius: 4px; vertical-align: middle; margin-right: 10px;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 50px; height: 50px; background: #282828; border-radius: 4px; text-align: center; line-height: 50px; margin-right: 10px; vertical-align: middle;">🎵</span>'
 
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        {img_html}
+                        <div>
+                            <b>{i+1}.</b> {song}<br>
+                            <span style="color: #B3B3B3; font-size: 0.85rem;">{artist} - {plays:,} plays</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+    # Songs 6-10
     with subcol2:
         for i in range(5, 10):
             if i < len(top_songs):
                 song = top_songs.index[i]
                 artist = filtered_df[filtered_df['track_name'] == song]['artist_name'].iloc[0]
                 plays = top_songs.values[i]
+                album_img = get_track_image(song, artist)
 
-                img_col, text_col = st.columns([1, 4])
-                with img_col:
-                    album_img = get_track_image(song, artist)
-                    display_image_with_placeholder(album_img, "🎵", width=50)
-                with text_col:
-                    st.markdown(f"<small><b>{i+1}.</b> {song}<br>{artist} - {plays:,} plays</small>", unsafe_allow_html=True)
+                # Use HTML to create inline image + text layout
+                if album_img:
+                    img_html = f'<img src="{album_img}" width="50" style="border-radius: 4px; vertical-align: middle; margin-right: 10px;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 50px; height: 50px; background: #282828; border-radius: 4px; text-align: center; line-height: 50px; margin-right: 10px; vertical-align: middle;">🎵</span>'
+
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        {img_html}
+                        <div>
+                            <b>{i+1}.</b> {song}<br>
+                            <span style="color: #B3B3B3; font-size: 0.85rem;">{artist} - {plays:,} plays</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -854,8 +896,8 @@ if view_type == "Artists":
         else:  # Season %
             item_order = heatmap_data_pct[selected_season].sort_values(ascending=False).index.tolist()
 
-    # Split into two columns of 15 items each
-    left_col, right_col = st.columns(2)
+    # Split into two columns of 15 items each (with gap adjustment)
+    left_col, right_col = st.columns([1, 1], gap="medium")
 
     # Left column: Items 1-15
     with left_col:
@@ -865,30 +907,34 @@ if view_type == "Artists":
                 global_rank = idx + 1
                 total_item_plays = int(total_plays_per_item[item])
 
-                # Compact row layout
-                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+                # Get artist image
+                item_img = get_artist_image(item)
 
-                with rank_col:
-                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+                # Season boxes with hover (outline style)
+                season_boxes = " ".join([
+                    f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                    for season in season_order
+                ])
 
-                with img_col:
-                    item_img = get_artist_image(item)
-                    display_image_with_placeholder(item_img, "🎤", width=700)
+                # Use HTML to create inline image + text layout (matching Top 10 style)
+                if item_img:
+                    img_html = f'<img src="{item_img}" width="55" height="55" style="border-radius: 4px; margin-right: 10px; object-fit: cover; flex-shrink: 0;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 55px; height: 55px; background: #282828; border-radius: 4px; text-align: center; line-height: 55px; margin-right: 10px; flex-shrink: 0; font-size: 1.3rem;">🎤</span>'
 
-                with info_col:
-                    # Season boxes with hover (outline style)
-                    season_boxes = " ".join([
-                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
-                        for season in season_order
-                    ])
-                    st.markdown(f"""
-                        <div style='padding-top: 4px; font-size: 0.85rem;'>
-                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
-                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 8px; border-radius: 6px; transition: background-color 0.2s;">
+                        {img_html}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis;">
+                                <span style='font-size: 0.85rem; font-weight: 600; color: #1DB954;'>#{global_rank}</span>
+                                <span style="font-weight: 600; margin-left: 4px;">{item}</span>
+                                <span style='color: #B3B3B3; font-size: 0.8rem; margin-left: 6px;'>({total_item_plays:,})</span>
+                            </div>
+                            <div style="margin-top: 4px;">{season_boxes}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
     # Right column: Items 16-30
     with right_col:
@@ -898,30 +944,34 @@ if view_type == "Artists":
                 global_rank = idx + 1
                 total_item_plays = int(total_plays_per_item[item])
 
-                # Compact row layout
-                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+                # Get artist image
+                item_img = get_artist_image(item)
 
-                with rank_col:
-                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+                # Season boxes with hover (outline style)
+                season_boxes = " ".join([
+                    f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                    for season in season_order
+                ])
 
-                with img_col:
-                    item_img = get_artist_image(item)
-                    display_image_with_placeholder(item_img, "🎤", width=700)
+                # Use HTML to create inline image + text layout (matching Top 10 style)
+                if item_img:
+                    img_html = f'<img src="{item_img}" width="55" height="55" style="border-radius: 4px; margin-right: 10px; object-fit: cover; flex-shrink: 0;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 55px; height: 55px; background: #282828; border-radius: 4px; text-align: center; line-height: 55px; margin-right: 10px; flex-shrink: 0; font-size: 1.3rem;">🎤</span>'
 
-                with info_col:
-                    # Season boxes with hover (outline style)
-                    season_boxes = " ".join([
-                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
-                        for season in season_order
-                    ])
-                    st.markdown(f"""
-                        <div style='padding-top: 4px; font-size: 0.85rem;'>
-                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
-                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 8px; border-radius: 6px; transition: background-color 0.2s;">
+                        {img_html}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis;">
+                                <span style='font-size: 0.85rem; font-weight: 600; color: #1DB954;'>#{global_rank}</span>
+                                <span style="font-weight: 600; margin-left: 4px;">{item}</span>
+                                <span style='color: #B3B3B3; font-size: 0.8rem; margin-left: 6px;'>({total_item_plays:,})</span>
+                            </div>
+                            <div style="margin-top: 4px;">{season_boxes}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
 else:  # Songs
     # Get top 30 songs overall from filtered range
@@ -952,8 +1002,8 @@ else:  # Songs
         else:  # Season %
             item_order = heatmap_data_pct[selected_season].sort_values(ascending=False).index.tolist()
 
-    # Split into two columns of 15 items each
-    left_col, right_col = st.columns(2)
+    # Split into two columns of 15 items each (with gap adjustment)
+    left_col, right_col = st.columns([1, 1], gap="medium")
 
     # Left column: Items 1-15
     with left_col:
@@ -966,31 +1016,35 @@ else:  # Songs
                 # Get artist for this track
                 artist = filtered_df[filtered_df['track_name'] == item]['artist_name'].iloc[0]
 
-                # Compact row layout
-                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+                # Get track image
+                item_img = get_track_image(item, artist)
 
-                with rank_col:
-                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+                # Season boxes with hover (outline style)
+                season_boxes = " ".join([
+                    f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                    for season in season_order
+                ])
 
-                with img_col:
-                    item_img = get_track_image(item, artist)
-                    display_image_with_placeholder(item_img, "🎵", width=50)
+                # Use HTML to create inline image + text layout (matching Top 10 style)
+                if item_img:
+                    img_html = f'<img src="{item_img}" width="55" height="55" style="border-radius: 4px; margin-right: 10px; object-fit: cover; flex-shrink: 0;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 55px; height: 55px; background: #282828; border-radius: 4px; text-align: center; line-height: 55px; margin-right: 10px; flex-shrink: 0; font-size: 1.3rem;">🎵</span>'
 
-                with info_col:
-                    # Season boxes with hover (outline style)
-                    season_boxes = " ".join([
-                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
-                        for season in season_order
-                    ])
-                    st.markdown(f"""
-                        <div style='padding-top: 4px; font-size: 0.85rem;'>
-                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
-                            <div style='color: #B3B3B3; font-size: 0.75rem;'>{artist}</div>
-                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 8px; border-radius: 6px; transition: background-color 0.2s;">
+                        {img_html}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis;">
+                                <span style='font-size: 0.85rem; font-weight: 600; color: #1DB954;'>#{global_rank}</span>
+                                <span style="font-weight: 600; margin-left: 4px;">{item}</span>
+                                <span style='color: #B3B3B3; font-size: 0.8rem; margin-left: 6px;'>({total_item_plays:,})</span>
+                            </div>
+                            <div style='color: #B3B3B3; font-size: 0.8rem; margin-bottom: 3px;'>{artist}</div>
+                            <div style="margin-top: 3px;">{season_boxes}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
     # Right column: Items 16-30
     with right_col:
@@ -1003,31 +1057,35 @@ else:  # Songs
                 # Get artist for this track
                 artist = filtered_df[filtered_df['track_name'] == item]['artist_name'].iloc[0]
 
-                # Compact row layout
-                rank_col, img_col, info_col = st.columns([0.3, 0.5, 4])
+                # Get track image
+                item_img = get_track_image(item, artist)
 
-                with rank_col:
-                    st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; color: #1DB954; padding-top: 8px;'>#{global_rank}</div>", unsafe_allow_html=True)
+                # Season boxes with hover (outline style)
+                season_boxes = " ".join([
+                    f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
+                    for season in season_order
+                ])
 
-                with img_col:
-                    item_img = get_track_image(item, artist)
-                    display_image_with_placeholder(item_img, "🎵", width=50)
+                # Use HTML to create inline image + text layout (matching Top 10 style)
+                if item_img:
+                    img_html = f'<img src="{item_img}" width="55" height="55" style="border-radius: 4px; margin-right: 10px; object-fit: cover; flex-shrink: 0;">'
+                else:
+                    img_html = f'<span style="display: inline-block; width: 55px; height: 55px; background: #282828; border-radius: 4px; text-align: center; line-height: 55px; margin-right: 10px; flex-shrink: 0; font-size: 1.3rem;">🎵</span>'
 
-                with info_col:
-                    # Season boxes with hover (outline style)
-                    season_boxes = " ".join([
-                        f"<span title='{int(heatmap_data.loc[item, season]):,} plays' style='display: inline-block; border: 1.5px solid {season_colors[season]}; color: {season_colors[season]}; opacity: {1.0 if (selected_season == 'All Seasons' or selected_season == season) else 0.35}; padding: 2px 6px; border-radius: 4px; margin-right: 4px; font-size: 0.7rem; cursor: help;'>{season_emoji[season]} {heatmap_data_pct.loc[item, season]:.0f}%</span>"
-                        for season in season_order
-                    ])
-                    st.markdown(f"""
-                        <div style='padding-top: 4px; font-size: 0.85rem;'>
-                            <div><b>{item}</b> <span style='color: #B3B3B3; font-size: 0.75rem;'>({total_item_plays:,})</span></div>
-                            <div style='color: #B3B3B3; font-size: 0.75rem;'>{artist}</div>
-                            <div style='margin-top: 4px;'>{season_boxes}</div>
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 8px; border-radius: 6px; transition: background-color 0.2s;">
+                        {img_html}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis;">
+                                <span style='font-size: 0.85rem; font-weight: 600; color: #1DB954;'>#{global_rank}</span>
+                                <span style="font-weight: 600; margin-left: 4px;">{item}</span>
+                                <span style='color: #B3B3B3; font-size: 0.8rem; margin-left: 6px;'>({total_item_plays:,})</span>
+                            </div>
+                            <div style='color: #B3B3B3; font-size: 0.8rem; margin-bottom: 3px;'>{artist}</div>
+                            <div style="margin-top: 3px;">{season_boxes}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                st.markdown("<hr style='margin: 4px 0; border-color: rgba(128, 128, 128, 0.1);'>", unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
 # Show total count
 st.caption(f"Showing top {len(item_order)} {view_type.lower()}")
